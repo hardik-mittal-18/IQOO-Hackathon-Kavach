@@ -1,0 +1,10 @@
+{
+  "description": "Creates professional, responsive websites quickly to help businesses and individuals establish a strong online presence with ease.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
