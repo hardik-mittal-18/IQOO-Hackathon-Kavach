@@ -15,7 +15,7 @@
       ]
     },
     "backend": {
-      "root": "backend/",
+      "root": "backend",
       "framework": "fastapi",
       "entrypoint": "main:app",
       "installCommand": "pip install -r requirements.txt"
