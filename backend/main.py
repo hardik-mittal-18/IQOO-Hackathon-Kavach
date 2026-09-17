@@ -110,6 +110,16 @@ def home() -> dict[str, str]:
 def health() -> dict[str, str]:
     return {"status": "ok"}
 
+@app.get("/api/config-check")
+def config_check() -> dict:
+    return {
+        "twilio_account_sid": bool(os.getenv("TWILIO_ACCOUNT_SID", "").strip()),
+        "twilio_auth_token": bool(os.getenv("TWILIO_AUTH_TOKEN", "").strip()),
+        "twilio_from_number": bool(os.getenv("TWILIO_FROM_NUMBER", "").strip()),
+        "twilio_media_stream_url": bool(os.getenv("TWILIO_MEDIA_STREAM_URL", "").strip()),
+        "deepgram_api_key": bool(os.getenv("DEEPGRAM_API_KEY", "").strip()),
+    }
+
 
 async def broadcast(message: dict) -> None:
     logger.info("WEBSOCKET_BROADCAST_STARTED event=%s", message["event"])
@@ -153,11 +163,34 @@ def twilio_config() -> tuple[str, str, str]:
     account_sid = os.getenv("TWILIO_ACCOUNT_SID", "").strip()
     auth_token = os.getenv("TWILIO_AUTH_TOKEN", "").strip()
     from_number = os.getenv("TWILIO_FROM_NUMBER", "").strip()
+
+    logger.info(
+        "TWILIO_CONFIG_CHECK sid_present=%s auth_present=%s from_present=%s",
+        bool(account_sid),
+        bool(auth_token),
+        bool(from_number),
+    )
+
     if not account_sid or not auth_token or not from_number:
+        missing = []
+
+        if not account_sid:
+            missing.append("TWILIO_ACCOUNT_SID")
+        if not auth_token:
+            missing.append("TWILIO_AUTH_TOKEN")
+        if not from_number:
+            missing.append("TWILIO_FROM_NUMBER")
+
+        logger.error(
+            "TWILIO_CONFIG_MISSING variables=%s",
+            ",".join(missing),
+        )
+
         raise HTTPException(
             status_code=503,
-            detail="Twilio is not configured. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER.",
+            detail=f"Twilio configuration missing: {', '.join(missing)}",
         )
+
     return account_sid, auth_token, from_number
 
 
