@@ -26,9 +26,20 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 logger = logging.getLogger("kavach")
 
 app = FastAPI(title="Kavach Scam Detection Backend")
+configured_origins = [
+    origin.strip()
+    for origin in os.getenv("CORS_ORIGINS", "").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8443", "http://127.0.0.1:8443"],
+    allow_origins=sorted(
+        {
+            "http://localhost:8443",
+            "http://127.0.0.1:8443",
+            *configured_origins,
+        }
+    ),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -93,6 +104,11 @@ def analyze_scam(transcript: str) -> tuple[int, str, list[str]]:
 @app.get("/")
 def home() -> dict[str, str]:
     return {"message": "Kavach backend running"}
+
+
+@app.get("/api/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
 
 
 async def broadcast(message: dict) -> None:

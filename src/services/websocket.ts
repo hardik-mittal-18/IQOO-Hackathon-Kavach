@@ -46,8 +46,10 @@ type CallMessage =
 
 export type WebSocketStatus = "CONNECTING" | "CONNECTED" | "DISCONNECTED" | "ERROR"
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL || "ws://127.0.0.1:8000/ws"
-const apiUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+const backendUrl =
+  import.meta.env.VITE_BACKEND_URL ||
+  `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/ws`
+const apiUrl = import.meta.env.VITE_API_URL || ""
 
 export async function sendDemoCall(phoneNumber: string): Promise<DemoCallResponse> {
   const response = await fetch(`${apiUrl}/api/test-call`, {
