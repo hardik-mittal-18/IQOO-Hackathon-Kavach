@@ -9,6 +9,7 @@ logger = logging.getLogger("kavach.llm")
 
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434").rstrip("/")
 DEFAULT_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
+IS_RENDER = os.getenv("RENDER", "").lower() in ("true", "1")
 
 
 class LLMAnalyzeRequest(BaseModel):
@@ -38,14 +39,26 @@ async def check_ollama_status() -> dict:
     except Exception as exc:
         logger.debug("Ollama status check failed: %s", exc)
 
+    is_local_host = any(h in OLLAMA_BASE_URL for h in ("127.0.0.1", "localhost", "0.0.0.0"))
+    status_text = (
+        "Offline / Cloud Deployment"
+        if (IS_RENDER and is_local_host)
+        else "Offline / Not Running"
+    )
+    instruction = (
+        f"Ollama runs on your local machine. Start Ollama and run: ollama run {DEFAULT_MODEL}"
+        if (IS_RENDER and is_local_host)
+        else f"Start Ollama and run: ollama run {DEFAULT_MODEL}"
+    )
+
     return {
         "online": False,
         "ollama_url": OLLAMA_BASE_URL,
         "target_model": DEFAULT_MODEL,
         "installed_models": [],
         "model_ready": False,
-        "status_text": "Offline / Not Running",
-        "instruction": f"Start Ollama and run: ollama run {DEFAULT_MODEL}",
+        "status_text": status_text,
+        "instruction": instruction,
     }
 
 
@@ -114,8 +127,12 @@ async def stream_ollama_analysis(
                             break
                     except json.JSONDecodeError:
                         continue
-    except httpx.ConnectError:
-        err = f"OFFLINE / NOT RUNNING. Start Ollama and run: ollama run {model}"
+    except (httpx.ConnectError, httpx.TimeoutException, httpx.RequestError):
+        is_local_host = any(h in OLLAMA_BASE_URL for h in ("127.0.0.1", "localhost", "0.0.0.0"))
+        if IS_RENDER and is_local_host:
+            err = "On-Device LLM is offline on cloud server. Ollama runs on your local computer or configure OLLAMA_BASE_URL."
+        else:
+            err = f"OFFLINE / NOT RUNNING. Start Ollama and run: ollama run {model}"
         yield f"data: {json.dumps({'error': err, 'done': True})}\n\n"
     except Exception as e:
         yield f"data: {json.dumps({'error': str(e), 'done': True})}\n\n"
