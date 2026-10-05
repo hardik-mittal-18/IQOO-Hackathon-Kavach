@@ -1,0 +1,38 @@
+node_modules/
+.venv/
+backend/.venv/
+__pycache__/
+*.py[cod]
+dist/
+build/
+.cache/
+.env*
+!.env.example
+.vite/
+vite.config.*.timestamp-*
+*.tsbuildinfo
+*-debug.log*
+logs/
+*.log
+.claude-replay.*
+.tmp-*
+.env
+.DS_Store
+
+# Android build outputs and caches
+android-kavach/.gradle/
+android-kavach/local.properties
+android-kavach/**/build/
+android-kavach/.idea/
+*.apk
+*.aab
+
+# Model files & weights
+*.gguf
+*.bin
+*.pt
+*.onnx
+
+# Platform-managed agentplat state
+/.plugins/
+/.opencode-skills/
